@@ -1,0 +1,1 @@
+.\bin\SpaceTraffic.exe %*

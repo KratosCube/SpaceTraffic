@@ -23,7 +23,6 @@ namespace SpaceTraffic;
 
 public partial class DrawingPanel : UserControl
 {
-    //string path = "C:\\Users\\vasac\\Downloads\\src\\src\\data\\complex";
     private readonly int m_StartTime;
 
     private double scale = 60;
@@ -96,33 +95,45 @@ public partial class DrawingPanel : UserControl
 
     public override void Render(DrawingContext context)
     {
-
         base.Render(context);
+
+        // Vymazání uložených pozic labelů z předchozího vykreslení
         occupiedLabels.Clear();
+
+        // Vykreslení černého pozadí přes celé okno
         var rect = new Rect(Bounds.Size);
         context.FillRectangle(Brushes.Black, rect);
 
-        double maxDistance = planets.Max(p => p.OrbitRadius);
+        // Výpočet největší vzdálenosti tělesa od středu soustavy
+        double maxDistance = planets.Max(p => GetMaxOrbitDistance(p));
+
+        // Přizpůsobení měřítka velikosti okna při zachování poměru souřadnic
         scale = ((Math.Min(Bounds.Width, Bounds.Height) * 0.45) / maxDistance);
+
+        // Zjištění, jaká část simulačního dne již uplynula
         double progress = GetDayProgress();
-        double elapsed =
-    (simulation.CurrentDate - new DateTime(2026, 9, 21)).TotalDays
-    + progress;
-        //Posunutí souřadnicového systému do středu 
+
+        // Výpočet času pro plynulé vykreslování pohybu
+        double elapsed = (simulation.CurrentDate - new DateTime(2026, 9, 21)).TotalDays + progress;
+
+        // Posunutí souřadnicového systému do středu okna
         using (context.PushTransform(Matrix.CreateTranslation(Bounds.Width * 0.5, Bounds.Height * 0.5)))
         {
+            // Vykreslení všech vesmírných těles a jejich oběžných drah
             foreach (var planet in planets)
             {
-                DrawPlanet(context, planet,scale, elapsed);
+                DrawPlanet(context, planet, scale, elapsed);
             }
+
+            // Vykreslení všech transportních lodí a jejich aktuálního stavu
             foreach (Ship ship in ships)
             {
                 DrawShip(context, ship, scale, elapsed, progress);
             }
         }
-        DrawDate(context);
 
-        //TODO: vykreslen� vesmirnych teles a transportnich lodi v aktualnim case
+        // Vykreslení aktuálního simulačního data v levém horním rohu okna
+        DrawDate(context);
     }
 
 
@@ -137,6 +148,16 @@ public partial class DrawingPanel : UserControl
             0.0,
             1.0
         );
+    }
+
+    private double GetMaxOrbitDistance(Planet planet)
+    {
+        double distance = planet.OrbitRadius;
+
+        if (planet.Parent != null)
+            distance += GetMaxOrbitDistance(planet.Parent);
+
+        return distance;
     }
 
     private void DrawPlanet(DrawingContext context, Planet planet, double scale, double elapsed)
@@ -165,116 +186,6 @@ public partial class DrawingPanel : UserControl
         }
     }
 
-    private void DrawPlanetLabel(
-    DrawingContext context,
-    Planet planet,
-    double radius,
-    Point planetScreenPosition)
-    {
-
-        // Pokud planeta produkuje nějaké zboží tak vykresluji i její staty.
-        string planetStats = "";
-        if (planet.WarehouseMax != 0)
-            planetStats = $"{planet.Warehouse}/{ planet.WarehouseMax}";
-
-        FormattedText planetName = new FormattedText(
-            $"{planet.Name}\n",
-            CultureInfo.InvariantCulture,
-            FlowDirection.LeftToRight,
-            Typeface.Default,
-            12,
-            Brushes.White
-        );
-
-        double barWidth = 60;
-        double barHeight = 16;
-        double spacing = 4;
-        double margin = 5;
-
-        // Rozměry CELÉHO popisku včetně ukazatele
-        double labelWidth = Math.Max(planetName.Width, barWidth);
-        double labelHeight = planetName.Height + spacing + barHeight;
-
-        // Možné pozice vzhledem ke středu planety
-        Point[] positions =
-        {
-            new Point(radius + margin, -labelHeight / 2),          // Vpravo
-            new Point(-radius - margin - labelWidth, -labelHeight / 2), // Vlevo
-            new Point(-labelWidth / 2, -radius - margin - labelHeight), // Nahoře
-            new Point(-labelWidth / 2, radius + margin)             // Dole
-        };
-
-        foreach (Point position in positions)
-        {
-            Rect candidate = new Rect(
-                planetScreenPosition.X + position.X,
-                planetScreenPosition.Y + position.Y,
-                labelWidth,
-                labelHeight
-            );
-
-            if (!IsLabelPositionFree(candidate))
-                continue;
-
-            occupiedLabels.Add(candidate);
-
-            // Posuneme název i ukazatel společně
-            using (context.PushTransform(
-                Matrix.CreateTranslation(position.X, position.Y)))
-            {
-                // Název a množství ve skladu
-                context.DrawText(planetName, new Point(0, 0));
-
-                // Ukazatel přímo pod textem
-                if (planet.WarehouseMax != 0)
-                DrawBar(
-                    context,
-                    0,
-                    planetName.Height + spacing,
-                    barWidth,
-                    barHeight,
-                    planet.FillRatio(),
-                    planet.Warehouse,
-                    planet.WarehouseMax
-                );
-            }
-
-            break;
-        }
-    }
-
-
-    private bool IsLabelPositionFree(Rect candidate)
-    {
-        double margin = 5;
-
-        // Hranice viditelné oblasti
-        double left = -Bounds.Width / 2 + margin;
-        double right = Bounds.Width / 2 - margin;
-        double top = -Bounds.Height / 2 + margin;
-        double bottom = Bounds.Height / 2 - margin;
-
-        // Kontrola, zda popisek nepřesahuje okno
-        if (candidate.Left < left ||
-            candidate.Right > right ||
-            candidate.Top < top ||
-            candidate.Bottom > bottom)
-        {
-            return false;
-        }
-
-        // Kontrola překryvu s ostatními popisky
-        foreach (Rect occupied in occupiedLabels)
-        {
-            if (candidate.Intersects(occupied))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     //vykreslení planety
     private void DrawBody(DrawingContext context, Planet planet)
     {
@@ -300,12 +211,12 @@ public partial class DrawingPanel : UserControl
 
     private void DrawShip(DrawingContext context, Ship ship, double scale, double elapsed, double progress)
     {
-        
+
 
         Point shipPosition;
 
         // Pokud je loď zakotvená, pohybuje se společně s planetou.
-        if (ship.DockedAt != null)
+        if (ship.DockedAt != null && !ship.JustDocked)
         {
             //shipPosition = new Point(ship.DockedAt.GetPosition(elapsed).X + ship.DockedAt.Size , ship.DockedAt.GetPosition(elapsed).Y);
             shipPosition = ship.DockedAt.GetPosition(elapsed);
@@ -315,12 +226,7 @@ public partial class DrawingPanel : UserControl
         {
 
             //interpolovana pozice
-            double x = ship.PreviousPosition.X + (ship.Position.X - ship.PreviousPosition.X) * progress;
-
-            double y = ship.PreviousPosition.Y+ (ship.Position.Y - ship.PreviousPosition.Y) * progress;
-
-
-            shipPosition = ship.InterpolatePosition(ship,progress);
+            shipPosition = ship.InterpolatePosition(ship, progress);
         }
         Point shipScreenPosition = new Point(
             shipPosition.X * scale,
@@ -328,18 +234,11 @@ public partial class DrawingPanel : UserControl
         );
 
         // Převod světových souřadnic na souřadnice vykreslování.
-        using (context.PushTransform(
-            Matrix.CreateTranslation(
-                shipPosition.X * scale,
-                shipPosition.Y * scale)))
+        using (context.PushTransform(Matrix.CreateTranslation(shipPosition.X * scale, shipPosition.Y * scale)))
         {
             double shipSize = 2.5;
 
-            context.DrawEllipse(
-                Brushes.Red,
-                null,
-                new Rect(-shipSize, -shipSize, 2 * shipSize, 2 * shipSize)
-            );
+            context.DrawEllipse(Brushes.Red, null, new Rect(-shipSize, -shipSize, 2 * shipSize, 2 * shipSize));
             DrawShipLabel(context, ship, shipScreenPosition);
         }
     }
@@ -358,7 +257,7 @@ public partial class DrawingPanel : UserControl
             12,
             Brushes.White
         );
-        
+
 
         // Určení šipky podle stavu lodi
         string arrow = "";
@@ -370,9 +269,9 @@ public partial class DrawingPanel : UserControl
         else if (ship.State == "Unloading")
             arrow = "↓";
 
-        
+
         FormattedText? shipState = null;
-        
+
         // TEXT: ShipState se ukazuje pouze pokud se nakládá nebo vykládá
         if (arrow != "")
         {
@@ -395,46 +294,25 @@ public partial class DrawingPanel : UserControl
         // Vyhradíme místo také pro šipku
         double arrowWidth = shipState != null ? shipState.Width + spacing : 0;
 
-        
+
         double contentWidth = Math.Max(shipName.Width, barWidth);
 
         double labelWidth = arrowWidth + contentWidth;
         double labelHeight = shipName.Height + spacing + barHeight;
 
         // Pozice pro popisky vzhledem ke středu lodi
-        Point[] positions =
-        {
-        new Point(margin, -labelHeight / 2),                // Vpravo
-        new Point(-labelWidth - margin, -labelHeight / 2),  // Vlevo
-        new Point(-labelWidth / 2, -labelHeight - margin),  // Nahoře
-        new Point(-labelWidth / 2, margin)                  // Dole
-    };
-
-
-        Point? selectedPosition = null;
-        
-        Rect selectedCandidate = default;
-
         // Najdeme první volnou pozici
-        foreach (Point position in positions)
-        {
-            Rect candidate = new Rect(
-                shipScreenPosition.X + position.X,
-                shipScreenPosition.Y + position.Y,
-                labelWidth,
-                labelHeight
-            );
-
-            if (IsLabelPositionFree(candidate))
-            {
-                selectedPosition = position;
-                selectedCandidate = candidate;
-                break;
-            }
-        }
+        Point? selectedPosition = FindLabelPosition(shipScreenPosition, 2.5, labelWidth, labelHeight, margin);
 
         if (selectedPosition == null)
             return;
+
+        Rect selectedCandidate = new Rect(
+            shipScreenPosition.X + selectedPosition.Value.X,
+            shipScreenPosition.Y + selectedPosition.Value.Y,
+            labelWidth,
+            labelHeight
+        );
 
         // Přidání do seznamu osazených pozic labely na obrazovce
         occupiedLabels.Add(selectedCandidate);
@@ -447,47 +325,135 @@ public partial class DrawingPanel : UserControl
             {
                 double arrowY = (labelHeight - shipState.Height) / 2;
 
-                context.DrawText(
-                    shipState,
-                    new Point(0, arrowY)
-                );
+                context.DrawText(shipState, new Point(0, arrowY));
             }
 
             // Obsah začíná napravo od šipky
             double contentX = arrowWidth;
 
             // Název lodi
-            context.DrawText(
-                shipName,
-                new Point(contentX, 0)
-            );
+            context.DrawText(shipName, new Point(contentX, 0));
 
             double barY = shipName.Height + spacing;
 
-            DrawBar(
-    context,
-    contentX,
-    barY,
-    60,
-    16,
-    ship.FillRatio(),
-    ship.Load,
-    ship.Capacity
-);
+            DrawBar(context, contentX, barY, 60, 16, ship.FillRatio(), ship.Load, ship.Capacity);
 
 
         }
     }
 
-    private void DrawBar(
-    DrawingContext context,
-    double x,
-    double y,
-    double width,
-    double height,
-    double fillRatio,
-    int currentValue,
-    int maxValue)
+    private void DrawPlanetLabel(DrawingContext context, Planet planet, double radius, Point planetScreenPosition)
+    {
+        // Pokud planeta produkuje nějaké zboží tak vykresluji i její staty.
+        FormattedText planetName = new FormattedText(
+            planet.Name,
+            CultureInfo.InvariantCulture,
+            FlowDirection.LeftToRight,
+            Typeface.Default,
+            12,
+            Brushes.White
+        );
+
+        double barWidth = 60;
+        double barHeight = 16;
+        double spacing = 4;
+        double margin = 5;
+
+        // Rozměry celého popisku včetně ukazatele
+        // Pokud planeta nemá ukazatel skladu tak se nezapočítává
+        bool showBar = planet.WarehouseMax != 0;
+
+        double labelWidth = showBar ? Math.Max(planetName.Width, barWidth) : planetName.Width;
+
+        double labelHeight = planetName.Height;
+
+        if (showBar)
+        {
+            labelHeight += spacing + barHeight;
+        }
+
+        // Možné pozice vzhledem ke středu planety
+        Point? selectedPosition = FindLabelPosition(planetScreenPosition, radius, labelWidth, labelHeight, margin);
+
+        if (selectedPosition == null)
+            return;
+
+        Rect candidate = new Rect(planetScreenPosition.X + selectedPosition.Value.X, planetScreenPosition.Y + selectedPosition.Value.Y, labelWidth, labelHeight);
+
+        occupiedLabels.Add(candidate);
+
+        // Posuneme název i ukazatel společně
+        using (context.PushTransform(Matrix.CreateTranslation(selectedPosition.Value.X, selectedPosition.Value.Y)))
+        {
+            // Název a množství ve skladu
+            context.DrawText(planetName, new Point(0, 0));
+
+            // Ukazatel přímo pod textem
+            if (showBar)
+                DrawBar(context, 0, planetName.Height + spacing, barWidth, barHeight, planet.FillRatio(), planet.Warehouse, planet.WarehouseMax);
+        }
+    }
+
+
+    private bool IsLabelPositionFree(Rect candidate)
+    {
+        double margin = 5;
+
+        // Hranice viditelné oblasti
+        double left = -Bounds.Width / 2 + margin;
+        double right = Bounds.Width / 2 - margin;
+        double top = -Bounds.Height / 2 + margin;
+        double bottom = Bounds.Height / 2 - margin;
+
+        // Kontrola, zda popisek nepřesahuje okno
+        if (candidate.Left < left || candidate.Right > right || candidate.Top < top || candidate.Bottom > bottom)
+        {
+            return false;
+        }
+
+        // Kontrola překryvu s ostatními popisky
+        foreach (Rect occupied in occupiedLabels)
+        {
+            if (candidate.Intersects(occupied))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private Point? FindLabelPosition(Point objectPosition, double radius, double labelWidth, double labelHeight, double margin)
+    {
+        for (double extra = 0; extra <= 160; extra += 20)
+        {
+            double distance = radius + margin + extra;
+
+            Point[] positions =
+            {
+                new Point(distance, -labelHeight / 2),
+                new Point(-distance - labelWidth, -labelHeight / 2),
+                new Point(-labelWidth / 2, -distance - labelHeight),
+                new Point(-labelWidth / 2, distance),
+                new Point(distance, -distance - labelHeight),
+                new Point(distance, distance),
+                new Point(-distance - labelWidth, -distance - labelHeight),
+                new Point(-distance - labelWidth, distance)
+            };
+
+            foreach (Point position in positions)
+            {
+                Rect candidate = new Rect(objectPosition.X + position.X, objectPosition.Y + position.Y, labelWidth, labelHeight);
+
+                if (IsLabelPositionFree(candidate))
+                    return position;
+            }
+        }
+
+        return null;
+    }
+
+    private void DrawBar(DrawingContext context, double x, double y, double width, double height, double fillRatio, int currentValue, int maxValue)
     {
         fillRatio = Math.Clamp(fillRatio, 0.0, 1.0);
 
@@ -524,21 +490,16 @@ public partial class DrawingPanel : UserControl
         );
 
         // Aktuální množství vlevo
-        context.DrawText(
-            current,
-            new Point(x + 2, y)
-        );
+        context.DrawText(current, new Point(x + 2, y));
 
         // Maximum vpravo
-        context.DrawText(
-            maxCapacity,
-            new Point(x + width - maxCapacity.Width - 2, y)
+        context.DrawText(maxCapacity, new Point(x + width - maxCapacity.Width - 2, y)
         );
 
     }
 
 
-    //Vykreslení dne
+    //Vykreslení data simulovaného dne
     private void DrawDate(DrawingContext context)
     {
         string dateText = simulation.CurrentDate.ToString("dd.MM.yyyy");

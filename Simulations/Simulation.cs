@@ -47,6 +47,7 @@ namespace SpaceTraffic.Simulations
             }
             foreach (Ship ship in ships)
             {
+                ship.JustDocked = false;
                 ship.RemainingTransfer = ship.TransferSpeed;
                 if (ship.State == "ReadyToDepart")
                 {
@@ -88,12 +89,15 @@ namespace SpaceTraffic.Simulations
                 ship.Capacity - ship.Load,
                 Math.Min(ship.RemainingTransfer, planet.Warehouse));
 
+            int possibleLoad = Math.Min(ship.Capacity - ship.Load, ship.RemainingTransfer);
+
             // Přičtení do nákladu lodi
             ship.Load += load;
 
             // Odečtení ze skladu planety
             planet.Warehouse -= load;
             Debug.WriteLine($"Ship {ship.Name} loaded {load} units from {planet.Name}. Ship load: {ship.Load}, Planet warehouse: {planet.Warehouse}");
+
 
             switch (ship.Strategy)
             {
@@ -103,7 +107,7 @@ namespace SpaceTraffic.Simulations
                     break;
 
                 case "IMMEDIATE":
-                    if (ship.Load > 0 && (ship.Load == ship.Capacity || planet.Warehouse == 0))
+                    if (ship.Load > 0 && (ship.Load == ship.Capacity || (ship.Load > 0 && planet.Warehouse < possibleLoad)))
                         ship.State = "ReadyToDepart";
                     break;
 
@@ -166,7 +170,7 @@ namespace SpaceTraffic.Simulations
             for (int i = 0; i < possibleDestinations.Count; i++)
             {
                 propabilitySum += possibleDestinations[i].Probability;
-                if (randomValue <= propabilitySum)
+                if (randomValue < propabilitySum)
                 {
                     selectedDestination = possibleDestinations[i];
                     break;
@@ -196,8 +200,10 @@ namespace SpaceTraffic.Simulations
 
             ship.DockedAt = null;
             ship.State = "Flying";
-            Debug.WriteLine($"Ship {ship.Name} departed from {destination.Source} to {destination.Target}. Load: {ship.Load}");
             
+            Debug.WriteLine($"Ship {ship.Name} departed from {destination.Source} to {destination.Target}. Load: {ship.Load}");
+            MoveShip(ship);
+
         }
 
 
@@ -213,18 +219,16 @@ namespace SpaceTraffic.Simulations
             Point dxy = new Point(targetPosition.X - shipPosition.X, targetPosition.Y - shipPosition.Y);
 
             double distance = Math.Sqrt(dxy.X * dxy.X + dxy.Y * dxy.Y);
-            Debug.WriteLine(
-    $"{ship.Name} -> {targetPlanet.Name} | " +
-    $"Distance: {distance:F3} | Speed: {ship.Speed:F3}"
-);
+
             if (distance <= ship.Speed)
             {
+                ship.PreviousPosition = ship.Position;
                 ship.Position = targetPosition;
                 ship.DockedAt = targetPlanet;
                 ship.Target = null;
                 ship.State = "Unloading";
                 ship.LoadTime = 0;
-
+                ship.JustDocked = true;
                 Debug.WriteLine($"Ship {ship.Name} arrived at {targetPlanet.Name}. Load: {ship.Load}");
                 return;
             }

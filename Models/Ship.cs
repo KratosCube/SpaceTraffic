@@ -23,7 +23,7 @@ namespace SpaceTraffic.Models
         public int LoadTime { get; set; } = 0;
         public Planet? Target { get; set; }
         public Planet? DockedAt { get; set; }
-        
+        public bool JustDocked { get; set; } = false;
         public Point PreviousPosition { get; set; }
         public Point Position { get; set; }
 
@@ -48,9 +48,23 @@ namespace SpaceTraffic.Models
 
         public Point InterpolatePosition(Ship ship, double progress)
         {
-            double x = ship.PreviousPosition.X + (ship.Position.X - ship.PreviousPosition.X) * progress;
+            double dx = ship.Position.X - ship.PreviousPosition.X;
+            double dy = ship.Position.Y - ship.PreviousPosition.Y;
 
-            double y = ship.PreviousPosition.Y + (ship.Position.Y - ship.PreviousPosition.Y) * progress;
+            double distance = Math.Sqrt(dx * dx + dy * dy);
+
+            if (distance == 0)
+                return ship.Position;
+
+            // Kolik jednotek loď urazí za danou část dne
+            double traveled = Math.Min(ship.Speed * progress, distance);
+
+            double directionX = dx / distance;
+            double directionY = dy / distance;
+
+            double x = ship.PreviousPosition.X + directionX * traveled;
+
+            double y = ship.PreviousPosition.Y + directionY * traveled;
 
             return new Point(x, y);
         }
