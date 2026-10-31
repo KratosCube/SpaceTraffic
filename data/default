@@ -1,0 +1,38 @@
+	# ============================================================
+# FULL SCENARIO
+# Start: 21. 9. 2126
+#
+# Time:
+#   1 simulation day = 1 second of real time
+#
+# Angles:
+#   degrees, measured counter-clockwise from the positive X axis
+#
+# angular_speed:
+#   degrees per simulation day
+#
+# orbit_radius:
+#   visualisation units; distances are intentionally non-linear
+# ============================================================
+
+
+[BODIES]
+# name        type       size    parent       orbit_radius  initial_angle  angular_speed  warehouse  prod_min  prod_max
+Sun           star       1.50    -            0.00          0              0.000000       0          0         0
+Earth         planet     1.00    Sun          3.00          20             0.986301       500        5         15
+Moon          moon       0.27    Earth        0.55          130            13.186813      150        1         5
+Mars          planet     0.53    Sun          4.20          155            0.523220       300        3         10
+
+[DESTINATIONS]
+# source       destination   probability
+Earth          Moon           30
+Earth          Mars           70
+
+Moon           Earth          50
+Moon           Mars           50
+
+Mars           Earth          100
+
+[SHIPS]
+# name       speed    start       capacity   transfer_speed  strategy       max_loadtime
+Falcon       0.150    Earth       20         10              FULL           0

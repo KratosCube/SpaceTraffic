@@ -1,0 +1,129 @@
+# ============================================================
+# FULL SCENARIO
+# Start: 21. 9. 2126
+#
+# Time:
+#   1 simulation day = 1 second of real time
+#
+# Angles:
+#   degrees, measured counter-clockwise from the positive X axis
+#
+# angular_speed:
+#   degrees per simulation day
+#
+# orbit_radius:
+#   visualisation units; distances are intentionally non-linear
+# ============================================================
+
+
+[BODIES]
+# name        type       size    parent       orbit_radius  initial_angle  angular_speed  warehouse  prod_min  prod_max
+Sun           star       1.50    -            0.00          0              0.000000       0          0         0
+Earth         planet     1.00    Sun          3.00          20             0.986301       500        5         15
+Moon          moon       0.27    Earth        0.55          130            13.186813      150        1         5
+Mars          planet     0.53    Sun          4.20          155            0.523220       300        3         10
+Phobos        moon       0.05    Mars         0.35          40             1128.125000    100        1         3
+Ceres         asteroid   0.15    Sun          5.50          250            0.214031       400        5         20
+Vesta         asteroid   0.12    Sun          5.00          330            0.271698       300        3         12
+Astra         asteroid   0.08    Sun          3.60          75             1.200000       200        2         8
+Borealis      asteroid   0.10    Sun          4.80          285            0.700000       200        2         8
+Jupiter       planet     1.20    Sun          6.80          45             0.083110       0          0         0
+Europa        moon       0.25    Jupiter      0.45          20             13.400000      150        1         4
+Ganymede      moon       0.41    Jupiter      0.65          145            7.200000       250        2         7
+Callisto      moon       0.38    Jupiter      0.90          270            4.000000       250        2         7
+Saturn        planet     1.05    Sun          8.20          215            0.033457       0          0         0
+Titan         moon       0.40    Saturn       0.70          65             22.700000      250        2         7
+Enceladus     moon       0.08    Saturn       0.45          210            263.000000     120        1         4
+
+
+[DESTINATIONS]
+# source       destination   probability
+Earth          Moon           30
+Earth          Mars           20
+Earth          Ceres          15
+Earth          Astra          15
+Earth          Borealis       10
+Earth          Titan          10
+
+Moon           Earth          50
+Moon           Mars           20
+Moon           Ceres          10
+Moon           Astra          10
+Moon           Borealis       10
+
+Mars           Earth          40
+Mars           Phobos         20
+Mars           Ceres          15
+Mars           Moon           15
+Mars           Titan          10
+
+Phobos         Mars            60
+Phobos         Earth            20
+Phobos         Ceres            20
+
+Ceres          Earth            25
+Ceres          Mars             20
+Ceres          Vesta            20
+Ceres          Astra            15
+Ceres          Borealis         10
+Ceres          Ganymede         10
+
+Vesta          Earth            30
+Vesta          Ceres             25
+Vesta          Mars              20
+Vesta          Ganymede          15
+Vesta          Callisto          10
+
+Astra          Earth             40
+Astra          Moon              20
+Astra          Mars              15
+Astra          Ceres             15
+Astra          Borealis           10
+
+Borealis       Earth             40
+Borealis       Moon              20
+Borealis       Mars              15
+Borealis       Ceres             15
+Borealis       Astra              10
+
+Europa         Earth             30
+Europa         Ganymede          25
+Europa         Callisto          20
+Europa         Mars              15
+Europa         Titan             10
+
+Ganymede       Earth             25
+Ganymede       Europa            20
+Ganymede       Callisto          20
+Ganymede       Mars              15
+Ganymede       Ceres             10
+Ganymede       Titan             10
+
+Callisto       Earth             25
+Callisto       Europa             20
+Callisto       Ganymede          20
+Callisto       Mars              15
+Callisto       Ceres             10
+Callisto       Titan             10
+
+Titan          Earth             30
+Titan          Mars              20
+Titan          Ceres             15
+Titan          Ganymede          15
+Titan          Callisto          10
+Titan          Enceladus         10
+
+Enceladus      Titan              30
+Enceladus      Earth              25
+Enceladus      Mars               15
+Enceladus      Ceres              15
+Enceladus      Ganymede            15
+
+
+[SHIPS]
+# name       speed    start       capacity   transfer_speed  strategy       max_loadtime
+Falcon       0.150    Earth       20         10              MAX_LOADTIME    0
+Hermes       0.100    Mars        40         8               MAX_LOADTIME    30
+Miner        0.060    Ceres       80         5               MAX_LOADTIME    60
+Courier      0.225    Moon        15         15              MAX_LOADTIME    0
+Odyssey      0.090    Titan       60         6               MAX_LOADTIME    45
