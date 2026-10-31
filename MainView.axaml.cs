@@ -13,4 +13,9 @@ public partial class MainView: UserControl
     {
         InitializeComponent();
     }
+
+    public MainView(string scenario) : this()
+    {
+        DrawingHost.Content = new DrawingPanel(scenario);
+    }
 }

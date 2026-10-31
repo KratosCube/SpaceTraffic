@@ -6,6 +6,6 @@
              xmlns:local="clr-namespace:SpaceTraffic"
              x:Class="SpaceTraffic.MainView">
     <Grid>
-        <local:DrawingPanel/>
+		<ContentControl x:Name="DrawingHost"/>
     </Grid>
 </UserControl>

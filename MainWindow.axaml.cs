@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using System;
+using System.IO;
 
 namespace SpaceTraffic
 {
@@ -11,15 +12,43 @@ namespace SpaceTraffic
         public MainWindow()
         {
             InitializeComponent();
+
+            Width = 800;
+            Height = 600;
+
+            MinWidth = 800;
+            MinHeight = 600;
+
         }
 
         /// <summary>
         /// Initializes new MainWindow with specified scenario
         /// </summary>
         /// <param name="scenario">name of the scenario</param>
-        public MainWindow(string scenario) : this()
+        public MainWindow(string scenario)
         {
-            //TODO: load scenario, or throw an exception if it does not exist
+            string path = Path.Combine(
+                AppContext.BaseDirectory,
+                "data",
+                scenario
+            );
+
+            if (!File.Exists(path))
+            {
+                throw new FileNotFoundException(
+                    $"Scénář '{scenario}' nebyl nalezen.",
+                    path
+                );
+            }
+
+            InitializeComponent();
+
+            Width = 800;
+            Height = 600;
+            MinWidth = 800;
+            MinHeight = 600;
+
+            ViewHost.Content = new MainView(scenario);
         }
     }
 }

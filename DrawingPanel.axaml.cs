@@ -39,15 +39,9 @@ public partial class DrawingPanel : UserControl
 
     private long lastSimulationTick;
     private double simulationIntervalMs = 1000.0;
-    public DrawingPanel()
+    public DrawingPanel(string scenario)
     {
-        string[] args = Environment.GetCommandLineArgs();
-        string scenario = args.Length > 1 ? args[1] : "default";
-        string path = Path.Combine(
-            AppContext.BaseDirectory,
-            "data",
-            scenario
-        );
+        string path = Path.Combine(AppContext.BaseDirectory, "data", scenario);
         InitializeComponent();
 
         m_StartTime = Environment.TickCount;
