@@ -23,8 +23,7 @@ namespace SpaceTraffic;
 
 public partial class DrawingPanel : UserControl
 {
-
-    string path = "C:\\Users\\vasac\\Downloads\\src\\src\\data\\complex";
+    //string path = "C:\\Users\\vasac\\Downloads\\src\\src\\data\\complex";
     private readonly int m_StartTime;
 
     private double scale = 60;
@@ -44,8 +43,12 @@ public partial class DrawingPanel : UserControl
     public DrawingPanel()
     {
         string[] args = Environment.GetCommandLineArgs();
-        string scenario = args.Length > 1 ? args[1] : Environment.CurrentDirectory + "data\\";
-        path = scenario;
+        string scenario = args.Length > 1 ? args[1] : "default";
+        string path = Path.Combine(
+            AppContext.BaseDirectory,
+            "data",
+            scenario
+        );
         InitializeComponent();
 
         m_StartTime = Environment.TickCount;

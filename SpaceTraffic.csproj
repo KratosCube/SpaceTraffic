@@ -19,7 +19,13 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
   </ItemGroup>
-
+	
+    <ItemGroup>
+	    <None Update="data\**\*">
+		    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	    </None>
+    </ItemGroup>
+	
   <ItemGroup>
     <Compile Update="MainView.axaml.cs">
       <DependentUpon>MainView.axaml</DependentUpon>
