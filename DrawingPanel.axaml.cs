@@ -237,10 +237,7 @@ public partial class DrawingPanel : UserControl
         }
     }
 
-    private void DrawShipLabel(
-    DrawingContext context,
-    Ship ship,
-    Point shipScreenPosition)
+    private void DrawShipLabel(DrawingContext context, Ship ship, Point shipScreenPosition)
     {
         // TEXT: Název lodi
         FormattedText shipName = new FormattedText(
@@ -260,7 +257,7 @@ public partial class DrawingPanel : UserControl
         if (ship.State == "Loading")
             arrow = "↑";
         // Při vykládce šipka dolů
-        else if (ship.State == "Unloading")
+        else if (ship.State == "Unloading" && !ship.JustDocked)
             arrow = "↓";
 
 
