@@ -193,7 +193,7 @@ namespace SpaceTraffic.Simulations
                 return;
             ship.Target = targetPlanet;
 
-            double elapsed = (CurrentDate - new DateTime(2026, 9, 21)).TotalDays;
+            double elapsed = (CurrentDate - new DateTime(2126, 9, 21)).TotalDays;
 
             ship.Position = ship.DockedAt.GetPosition(elapsed);
             ship.PreviousPosition = ship.Position;
