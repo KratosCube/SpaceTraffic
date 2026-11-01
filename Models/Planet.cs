@@ -36,6 +36,7 @@ namespace SpaceTraffic.Models
             Color = Brushes.White;
         }
 
+        // Metoda pro získání aktuálního úhlu planety na její orbitě vzhledem k času
         public double GetActualAngle(double elapsedTime)
         {
             return (InitialAngle + elapsedTime * AngularSpeed) * Math.PI / 180.0;
@@ -59,6 +60,7 @@ namespace SpaceTraffic.Models
             return new Point(x, y);
         }
 
+        // Výpočet poměru naplnění skladu planety
         public double FillRatio()
         {
             if (WarehouseMax <= 0)

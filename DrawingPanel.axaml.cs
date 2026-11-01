@@ -25,25 +25,30 @@ public partial class DrawingPanel : UserControl
 {
     private readonly int m_StartTime;
 
+    // Měřítko pro převod simulovaných souřadnic na souřadnice pro vykreslování
     private double scale = 60;
 
     double maxDistance;
     double minDistance;
+
     private readonly List<Planet> planets;
     private readonly List<Destination> destanations;
     private readonly List<Ship> ships;
 
     private readonly Simulation simulation;
 
+    // Seznam obsazených pozic popisků na obrazovce
     private readonly List<Rect> occupiedLabels = new();
 
+    // Poslední časový okamžik, kdy byla provedena simulace
     private long lastSimulationTick;
+    // Interval simulace - 1 sekunda
     private double simulationIntervalMs = 1000.0;
     public DrawingPanel(string scenario)
     {
         string path = Path.Combine(AppContext.BaseDirectory, "data", scenario);
         InitializeComponent();
-
+        // Timer pro výpočet plynulého pohybu planet a lodí
         m_StartTime = Environment.TickCount;
         var timer = new DispatcherTimer()
         {
@@ -52,7 +57,7 @@ public partial class DrawingPanel : UserControl
         timer.Tick += (_, _) => this.InvalidateVisual();
         timer.Start();
 
-
+        // Timer pro simulaci
         var simulationTimer = new DispatcherTimer()
         {
             Interval = TimeSpan.FromSeconds(1)
@@ -61,15 +66,19 @@ public partial class DrawingPanel : UserControl
         planets = loader.LoadPlanets(path);
         destanations = loader.LoadDestinations(path);
         ships = loader.LoadShips(path);
+
+        // Nastavení počáteční pozice lodi na základě její startovní planety
         foreach (var ship in ships)
         {
             ship.DockedAt = planets.Find(p => p.Name == ship.Start);
         }
 
+        // Vytvoření instance simulace
         simulation = new Simulation(planets, ships, destanations);
 
         lastSimulationTick = Environment.TickCount64;
 
+        // Nastavení události Tick pro simulaci
         simulationTimer.Tick += (_, _) =>
         {
             long now = Environment.TickCount64;
@@ -77,6 +86,7 @@ public partial class DrawingPanel : UserControl
             simulationIntervalMs = now - lastSimulationTick;
             lastSimulationTick = now;
 
+            // Provedení simulace pro jeden den
             simulation.SimulateDay();
         };
 
@@ -131,7 +141,7 @@ public partial class DrawingPanel : UserControl
     }
 
 
-
+    // Metoda pro získání progresu dne jako hodnoty mezi 0 a 1
     private double GetDayProgress()
     {
         double elapsedMilliseconds =
@@ -144,6 +154,8 @@ public partial class DrawingPanel : UserControl
         );
     }
 
+    // Metoda pro získání maximální vzdálenosti planety od středu soustavy
+    // Pokud má planeta rodiče, tak se vzdálenost sčítá s vzdáleností rodiče
     private double GetMaxOrbitDistance(Planet planet)
     {
         double distance = planet.OrbitRadius;
@@ -154,6 +166,7 @@ public partial class DrawingPanel : UserControl
         return distance;
     }
 
+    // Metoda pro vykreslení planety a její oběžné dráhy
     private void DrawPlanet(DrawingContext context, Planet planet, double scale, double elapsed)
     {
         Point planetPosition = planet.GetPosition(elapsed);
@@ -168,11 +181,11 @@ public partial class DrawingPanel : UserControl
 
             using (context.PushTransform(Matrix.CreateTranslation(x, y)))
             {
-                DrawObeznaDraha(context, planet, scale);
+                DrawOrbit(context, planet, scale);
             }
         }
 
-        //vykresnení planet a měsíců
+        // Vykreslení planet a měsíců
         using (context.PushTransform(Matrix.CreateTranslation(planetPosition.X * scale, planetPosition.Y * scale)))
         {
             DrawBody(context, planet);
@@ -180,15 +193,15 @@ public partial class DrawingPanel : UserControl
         }
     }
 
-    //vykreslení planety
+    // Vykreslení těla planety
     private void DrawBody(DrawingContext context, Planet planet)
     {
         double planetSize = planet.Size * scale * 0.2;
         context.DrawEllipse(planet.Color, null, new Rect(-planetSize, -planetSize, 2 * planetSize, 2 * planetSize));
     }
 
-    //vykreslení oběžné dráhy planety
-    private void DrawObeznaDraha(DrawingContext context, Planet planet, double scale)
+    // Vykreslení oběžné dráhy planety
+    private void DrawOrbit(DrawingContext context, Planet planet, double scale)
     {
 
         Pen dashedPen = new Pen(Brushes.Gray, 1)
@@ -202,7 +215,7 @@ public partial class DrawingPanel : UserControl
     }
 
 
-
+    // Metoda pro vykreslení lodi
     private void DrawShip(DrawingContext context, Ship ship, double scale, double elapsed, double progress)
     {
 
@@ -237,6 +250,7 @@ public partial class DrawingPanel : UserControl
         }
     }
 
+    // Metoda pro vykreslení popisku lodi
     private void DrawShipLabel(DrawingContext context, Ship ship, Point shipScreenPosition)
     {
         // TEXT: Název lodi
@@ -333,6 +347,7 @@ public partial class DrawingPanel : UserControl
         }
     }
 
+    // Metoda pro vykreslení popisku planety
     private void DrawPlanetLabel(DrawingContext context, Planet planet, double radius, Point planetScreenPosition)
     {
         // Pokud planeta produkuje nějaké zboží tak vykresluji i její staty.
@@ -385,7 +400,7 @@ public partial class DrawingPanel : UserControl
         }
     }
 
-
+    // Metoda pro kontrolu, zda je pozice popisku volná
     private bool IsLabelPositionFree(Rect candidate)
     {
         double margin = 5;
@@ -414,6 +429,7 @@ public partial class DrawingPanel : UserControl
         return true;
     }
 
+    // Metoda pro nalezení vhodné pozice popisku vzhledem k objektu
     private Point? FindLabelPosition(Point objectPosition, double radius, double labelWidth, double labelHeight, double margin)
     {
         for (double extra = 0; extra <= 160; extra += 20)
@@ -432,6 +448,7 @@ public partial class DrawingPanel : UserControl
                 new Point(-distance - labelWidth, distance)
             };
 
+            // Procházení všech možných pozic a hledání první volné
             foreach (Point position in positions)
             {
                 Rect candidate = new Rect(objectPosition.X + position.X, objectPosition.Y + position.Y, labelWidth, labelHeight);
@@ -444,6 +461,7 @@ public partial class DrawingPanel : UserControl
         return null;
     }
 
+    // Metoda pro vykreslení baru s aktuálním a maximálním množstvím
     private void DrawBar(DrawingContext context, double x, double y, double width, double height, double fillRatio, int currentValue, int maxValue)
     {
         fillRatio = Math.Clamp(fillRatio, 0.0, 1.0);

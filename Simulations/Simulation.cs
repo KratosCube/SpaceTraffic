@@ -29,10 +29,12 @@ namespace SpaceTraffic.Simulations
         //Simulace generovaní do skladů
         public void SimulateDay()
         {
+            // Přidání jednoho dne k aktuálnímu datu
             CurrentDate = CurrentDate.AddDays(1);
             foreach (Planet planet in planets)
             {
 
+                // Generování nákladu do skladu planety, pokud není plný
                 if (planet.Warehouse < planet.WarehouseMax)
                 {
                     int generatedLoad = Random.Shared.Next(planet.ProdMin, planet.ProdMax + 1);
@@ -45,6 +47,7 @@ namespace SpaceTraffic.Simulations
 
                 // Debug.WriteLine($"{planet.Name}: {planet.Warehouse}");
             }
+            // Rozlišení stavu každé lodi a provedení příslušné akce
             foreach (Ship ship in ships)
             {
                 ship.JustDocked = false;
@@ -71,11 +74,11 @@ namespace SpaceTraffic.Simulations
             //Debug.WriteLine("--------------------");
 
 
-            // Přidání jednoho dne k aktuálnímu datu
+            
             
         }
 
-
+        // Metoda pro naložení nákladu na loď
         private void LoadShip(Ship ship)
         {
             if (ship.State != "Loading")
@@ -85,10 +88,13 @@ namespace SpaceTraffic.Simulations
 
             Planet planet = ship.DockedAt;
 
+            // Výpočet množství nákladu, které lze naložit na loď
             int load = Math.Min(
                 ship.Capacity - ship.Load,
                 Math.Min(ship.RemainingTransfer, planet.Warehouse));
 
+
+            // Výpočet maximálního množství nákladu, které lze naložit na loď podle strategie
             int possibleLoad = Math.Min(ship.Capacity - ship.Load, ship.RemainingTransfer);
 
             // Přičtení do nákladu lodi
@@ -98,7 +104,7 @@ namespace SpaceTraffic.Simulations
             planet.Warehouse -= load;
             Debug.WriteLine($"Ship {ship.Name} loaded {load} units from {planet.Name}. Ship load: {ship.Load}, Planet warehouse: {planet.Warehouse}");
 
-
+            // Kontrola strategie lodi a případné změny stavu
             switch (ship.Strategy)
             {
                 case "FULL":
@@ -129,6 +135,8 @@ namespace SpaceTraffic.Simulations
             }
         }
 
+
+        // Metoda pro vyložení nákladu z lodi
         private void UnloadShip(Ship ship)
         {
             if (ship.State != "Unloading")
@@ -136,12 +144,15 @@ namespace SpaceTraffic.Simulations
             if (ship.DockedAt == null)
                 return;
 
+            // Výpočet množství nákladu, které lze vyložit z lodi
             int unload = Math.Min(ship.Load, ship.TransferSpeed);
 
             
             ship.RemainingTransfer = ship.TransferSpeed - unload;
 
             ship.Load -= unload;
+
+            // Nastavení stavu lodi na "Loading" po vyložení nákladu
             if (ship.Load == 0)
             {
                 
@@ -155,11 +166,13 @@ namespace SpaceTraffic.Simulations
         }
 
 
+        // Metoda pro výběr cílové destinace pro loď
         private Destination? SelectDestination(Ship ship)
         {
             if (ship.DockedAt == null)
                 return null;
 
+            // Filtrace destinací podle aktuální planety (source), kde je loď zakotvena
             List<Destination> possibleDestinations =
                 destinations.Where(d => d.Source == ship.DockedAt.Name).ToList();
 
@@ -167,6 +180,7 @@ namespace SpaceTraffic.Simulations
             int propabilitySum = 0;
             Destination? selectedDestination = null;
 
+            // Výběr destinace na základě náhodného čísla a pravděpodobností
             for (int i = 0; i < possibleDestinations.Count; i++)
             {
                 propabilitySum += possibleDestinations[i].Probability;
@@ -180,19 +194,22 @@ namespace SpaceTraffic.Simulations
 
         }
 
-
+        // Metoda pro odlet lodi z planety a nastaveníjejího cíle
         private void DepartShip(Ship ship)
         {
             if (ship.DockedAt == null)
                 return;
+            // Výběr cílové destinace pro loď
             Destination? destination = SelectDestination(ship);
             if (destination == null)
                 return;
+
             Planet? targetPlanet = planets.Find(p => p.Name == destination.Target);
             if (targetPlanet == null)
                 return;
             ship.Target = targetPlanet;
 
+            // Výpočet pozice lodi na základě aktuálního času a pozice cílové planety
             double elapsed = (CurrentDate - new DateTime(2026, 9, 21)).TotalDays;
 
             ship.Position = ship.DockedAt.GetPosition(elapsed);
@@ -206,7 +223,7 @@ namespace SpaceTraffic.Simulations
 
         }
 
-
+        // Metoda pro pohyb lodi směrem k cílové planetě
         private void MoveShip(Ship ship)
         {
             double elapsed = (CurrentDate - new DateTime(2026, 9, 21)).TotalDays;
@@ -215,11 +232,12 @@ namespace SpaceTraffic.Simulations
             Planet targetPlanet = ship.Target;
             Point targetPosition = ship.Target.GetPosition(elapsed);
             Point shipPosition = ship.Position;
-            
-            Point dxy = new Point(targetPosition.X - shipPosition.X, targetPosition.Y - shipPosition.Y);
 
+            // Výpočet vzdálenosti mezi pozicí lodi a cílovou planetou
+            Point dxy = new Point(targetPosition.X - shipPosition.X, targetPosition.Y - shipPosition.Y);
             double distance = Math.Sqrt(dxy.X * dxy.X + dxy.Y * dxy.Y);
 
+            // Pokud je vzdálenost menší nebo rovna rychlosti lodi, loď "dorazí" na cílovou planetu
             if (distance <= ship.Speed)
             {
                 ship.PreviousPosition = ship.Position;
@@ -233,7 +251,7 @@ namespace SpaceTraffic.Simulations
                 return;
             }
 
-
+            // Výpočet směru pohybu lodi směrem k cílové planetě
             if (distance == 0)
                 return;
             double directionX = dxy.X / distance;

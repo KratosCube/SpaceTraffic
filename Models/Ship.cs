@@ -46,6 +46,8 @@ namespace SpaceTraffic.Models
             return Capacity > 0 ? (double)Load / Capacity : 0;
         }
 
+        // Metoda pro interpolaci pozice lodi mezi předchozí a aktuální pozicí na základě zadaného pokroku
+        // Pro plynulý pohyb lodi během letu
         public Point InterpolatePosition(Ship ship, double progress)
         {
             double dx = ship.Position.X - ship.PreviousPosition.X;
