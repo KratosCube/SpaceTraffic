@@ -209,7 +209,7 @@ namespace SpaceTraffic.Simulations
 
         private void MoveShip(Ship ship)
         {
-            double elapsed = (CurrentDate - new DateTime(2026, 9, 21)).TotalDays;
+            double elapsed = (CurrentDate - new DateTime(2126, 9, 21)).TotalDays;
             if (ship.State != "Flying" || ship.Target == null)
                 return;
             Planet targetPlanet = ship.Target;
