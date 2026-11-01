@@ -37,7 +37,7 @@ namespace SpaceTraffic.Services
                     {
 
                     for (int j = 1; ; j++)
-                    {
+                        {
                         if (lines[i+j].StartsWith("#")) continue; 
                             // Když se narazí na další sekci tak se loop končí
                             if (lines[i + j].Contains("[DESTINATIONS]"))
