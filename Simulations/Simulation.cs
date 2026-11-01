@@ -14,7 +14,7 @@ namespace SpaceTraffic.Simulations
         private readonly List<Planet> planets;
         private readonly List<Ship> ships;
         private readonly List<Destination> destinations;
-        public DateTime CurrentDate { get; private set; } = new DateTime(2026, 9, 21);
+        public DateTime CurrentDate { get; private set; } = new DateTime(2126, 9, 21);
 
         public Simulation(
             List<Planet> planets,
@@ -210,7 +210,7 @@ namespace SpaceTraffic.Simulations
             ship.Target = targetPlanet;
 
             // Výpočet pozice lodi na základě aktuálního času a pozice cílové planety
-            double elapsed = (CurrentDate - new DateTime(2026, 9, 21)).TotalDays;
+            double elapsed = (CurrentDate - new DateTime(2126, 9, 21)).TotalDays;
 
             ship.Position = ship.DockedAt.GetPosition(elapsed);
             ship.PreviousPosition = ship.Position;

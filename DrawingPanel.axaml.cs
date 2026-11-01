@@ -118,7 +118,7 @@ public partial class DrawingPanel : UserControl
         double progress = GetDayProgress();
 
         // Výpočet času pro plynulé vykreslování pohybu
-        double elapsed = (simulation.CurrentDate - new DateTime(2026, 9, 21)).TotalDays + progress;
+        double elapsed = (simulation.CurrentDate - new DateTime(2126, 9, 21)).TotalDays + progress;
 
         // Posunutí souřadnicového systému do středu okna
         using (context.PushTransform(Matrix.CreateTranslation(Bounds.Width * 0.5, Bounds.Height * 0.5)))
