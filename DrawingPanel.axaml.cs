@@ -27,10 +27,6 @@ public partial class DrawingPanel : UserControl
 
     // Měřítko pro převod simulovaných souřadnic na souřadnice pro vykreslování
     private double scale = 60;
-
-    double maxDistance;
-    double minDistance;
-
     private readonly List<Planet> planets;
     private readonly List<Destination> destanations;
     private readonly List<Ship> ships;
